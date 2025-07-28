@@ -9,7 +9,7 @@ spring:
       memory:
         repository:
           jdbc:
-            initialize-schema: always
+            initialize-schema: never
 
   datasource:
     url: jdbc:postgresql://db-postgresql-fra1-85342-do-user-24244176-0.l.db.ondigitalocean.com:25060/defaultdb
@@ -25,3 +25,12 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
         default_schema: klupica
+
+db:
+  schema:
+    name: klupica
+
+ai:
+  prompt:
+    md:
+      name: prompt
