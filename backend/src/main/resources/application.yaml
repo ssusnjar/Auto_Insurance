@@ -1,0 +1,12 @@
+spring:
+  ai:
+    mistralai:
+      api-key: ${MISTRAL_API_KEY}
+
+  datasource:
+    url: jdbc:postgresql://db-postgresql-fra1-85342-do-user-24244176-0.l.db.ondigitalocean.com:25060/defaultdb
+    username: tim2
+    password: ${DATABASE_PASSWORD}
+
+
+
