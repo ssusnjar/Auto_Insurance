@@ -2,5 +2,18 @@
   width: 500px;
 }
 
-.p-button .no-style-button {
+/* no style button */
+.p-button.no-style-button {
+  background-color: transparent;
+  border: none;
+  color: black;
+  text-align: start;
+}
+
+.p-button.no-style-button:hover {
+  background-color: rgb(183, 183, 183);
+}
+
+.p-button.no-style-button:focus {
+  box-shadow: none;
 }

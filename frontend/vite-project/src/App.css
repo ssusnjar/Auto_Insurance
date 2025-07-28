@@ -9,15 +9,27 @@ body {
 
 .sidebar {
   display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   align-items: start;
-  padding: 1rem 0 0 1rem;
-  border-right: 1px solid gray;
-  background-color: rgb(223, 223, 223);
-  min-width: 16rem;
+  padding: 1rem 0 1rem 1rem;
+  border-right: 1px solid #ced4da;
+  min-width: 14rem;
+
+  .chat-search-section {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .history {
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 .container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   width: 100%;
