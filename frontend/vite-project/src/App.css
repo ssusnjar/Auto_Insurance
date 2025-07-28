@@ -1,0 +1,25 @@
+body {
+  margin: 0;
+}
+.app {
+  display: flex;
+  flex-direction: row;
+  gap: 5rem;
+}
+
+.sidebar {
+  display: flex;
+  align-items: start;
+  padding: 1rem 0 0 1rem;
+  border-right: 1px solid gray;
+  background-color: rgb(223, 223, 223);
+  min-width: 16rem;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh;
+}
