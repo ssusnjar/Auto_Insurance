@@ -7,26 +7,58 @@ import { Chart } from "primereact/chart";
 import { Divider } from "primereact/divider";
 import { Card } from "primereact/card";
 
+interface History {
+  id: number;
+  input: string;
+}
+
 export default function App() {
   const [value, setValue] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [chartData, setChartData] = useState({});
+  const [history, setHistory] = useState<History[]>([]);
+  const [historyId, setHistoryId] = useState<number>(1);
 
   const handleClick = () => {
     setLoading(true);
 
-    fetch("http://localhost:3001/departments")
+    fetch(`http://localhost:3001/citiesData/${value}`)
       .then((res) => res.json())
       .then((data) => {
-        setChartData({
-          labels: data.map((el: any) => el.label),
+        const newData = {
+          labels: data.salaries.map((el: any) => el.label),
+          id: data.salaries.map((el: any) => el.id),
           datasets: [
             {
-              data: data.map((el: any) => el.value),
+              data: data.salaries.map((el: any) => el.value),
             },
           ],
-        });
+        };
 
+        setChartData(newData);
+        setHistory((prev) => [...prev, { id: historyId, input: value }]);
+        setHistoryId(historyId + 1);
+        setLoading(false);
+        setValue("");
+      });
+  };
+
+  const handleHistoryClick = (input: string) => {
+    fetch(`http://localhost:3001/citiesData/${input}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const newData = {
+          labels: data.salaries.map((el: any) => el.label),
+          id: data.salaries.map((el: any) => el.id),
+          datasets: [
+            {
+              data: data.salaries.map((el: any) => el.value),
+            },
+          ],
+        };
+
+        setChartData(newData);
+        setValue("");
         setLoading(false);
       });
   };
@@ -46,26 +78,40 @@ export default function App() {
     setValue("");
     setLoading(false);
     setChartData("");
-  }
+  };
 
   return (
     <PrimeReactProvider>
       <div className="app">
         <div className="sidebar">
-          <div className="chat-section">  
+          <div className="chat-section">
             <Button
               label="Novi upit"
               icon="pi pi-plus"
               size="small"
               className="p-button-sm p-button-text w-full mb-2"
-              onClick={startNewChat} 
+              onClick={startNewChat}
             />
             <Divider />
-            <div className="history">
-                <h4><i className="pi pi-history" />Povijest</h4>
-                <Button label="Upit 2" className="p-button-text p-button-sm w-full" />
-                <Button label="Upit 1" className="p-button-text p-button-sm w-full" />
-            </div>
+            <h3>
+              <div
+                className="pi pi-history
+"
+              ></div>{" "}
+              Povijest
+            </h3>
+            {history.map((item, index) => {
+              return (
+                <Button
+                  key={index}
+                  label={item.input}
+                  value={item.input}
+                  size="small"
+                  className="no-style-button"
+                  onClick={() => handleHistoryClick(item.input)}
+                />
+              );
+            })}
           </div>
         </div>
         <div className="container">
@@ -76,7 +122,7 @@ export default function App() {
               <>
                 {chartData?.datasets && chartData.datasets.length > 0 && (
                   <Card className="chart-box">
-                  <Chart type="pie" data={chartData} options={chartOptions} />
+                    <Chart type="pie" data={chartData} options={chartOptions} />
                   </Card>
                 )}
               </>

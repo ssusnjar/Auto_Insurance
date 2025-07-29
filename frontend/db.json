@@ -1,14 +1,37 @@
 {
-  "departments": [
-    { "id": 1, "label": "Development", "value": 120 },
-    { "id": 2, "label": "Marketing", "value": 90 },
-    { "id": 3, "label": "Sales", "value": 110 },
-    { "id": 4, "label": "Support", "value": 80 },
-    { "id": 5, "label": "HR", "value": 40 },
-    { "id": 6, "label": "Finance", "value": 60 },
-    { "id": 7, "label": "Legal", "value": 30 },
-    { "id": 8, "label": "IT", "value": 70 },
-    { "id": 9, "label": "R&D", "value": 55 },
-    { "id": 10, "label": "Operations", "value": 95 }
+  "citiesData": [
+    {
+      "id": "1",
+      "salaries": [
+        { "label": "Zagreb", "value": 1500 },
+        { "label": "Split", "value": 1300 },
+        { "label": "Rijeka", "value": 1250 }
+      ],
+      "population": [
+        { "label": "Grad Zagreb", "value": 767000 },
+        { "label": "Splitsko-dalmatinska", "value": 455000 },
+        { "label": "Primorsko-goranska", "value": 296000 },
+        { "label": "Osječko-baranjska", "value": 259000 },
+        { "label": "Zadarska", "value": 170000 },
+        { "label": "Istarska", "value": 195000 },
+        { "label": "Brodsko-posavska", "value": 140000 },
+        { "label": "Karlovačka", "value": 120000 },
+        { "label": "Varaždinska", "value": 170000 },
+        { "label": "Šibensko-kninska", "value": 109000 }
+      ]
+    },
+    {
+      "id": "2",
+      "salaries": [
+        { "label": "Karlovac", "value": 1130 },
+        { "label": "Varaždin", "value": 1220 },
+        { "label": "Šibenik", "value": 1170 }
+      ],
+      "population": [
+        { "label": "Grad Zagreb", "value": 767000 },
+        { "label": "Splitsko-dalmatinska", "value": 455000 },
+        { "label": "Primorsko-goranska", "value": 296000 }
+      ]
+    }
   ]
 }
