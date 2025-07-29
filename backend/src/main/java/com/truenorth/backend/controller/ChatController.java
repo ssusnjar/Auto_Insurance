@@ -1,17 +1,16 @@
 package com.truenorth.backend.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.truenorth.backend.dto.ChatRequest;
-import com.truenorth.backend.dto.ChatResponse;
+import com.truenorth.backend.dto.ChatResponseDTO;
 import com.truenorth.backend.service.ChatService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/chat")
+@CrossOrigin(origins = "*")
 public class ChatController {
 
     private final ChatService chatService;
@@ -21,9 +20,9 @@ public class ChatController {
     }
 
     @PostMapping
-    public ResponseEntity<ChatResponse> handleChatMessage(@Valid @RequestBody ChatRequest request) {
+    public ResponseEntity<ChatResponseDTO> handleChatMessage(@Valid @RequestBody ChatRequest request) throws JsonProcessingException {
 
-        ChatResponse response = chatService.processMessage(
+        ChatResponseDTO response = chatService.processMessage(
                 request.getConversationId(),
                 request.getMessage()
         );

@@ -10,15 +10,14 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatResponse {
-    private String query;
+public class ChatResponseDTO {
     private String visualizationType;
     private String explanation;
     private List<String> columns;
+    private List<Map<String, Object>> data;
     private String title;
     private String xAxis;
     private String yAxis;
-    private List<Map<String, Object>> data;
     private boolean isQueryResponse;
-    private String error;
+    private boolean error;
 }

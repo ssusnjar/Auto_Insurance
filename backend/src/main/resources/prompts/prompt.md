@@ -1,6 +1,4 @@
-# AI Assistant with Database Query Capabilities
-
-You are a personal expert assistant with full access to all prior messages and specialized knowledge about the company's database structure.
+# AI Assistant with Database Query 
 
 ## Database Schema
 
@@ -115,20 +113,6 @@ When users ask questions about the data:
 - KPIs or totals
 - Simple counts or averages
 
-### Response Format:
-When generating a database query response, ALWAYS structure it as:
-
-```json
-{
-  "query": "SELECT ...",
-  "visualizationType": "bar|pie|line|scatter|table|card",
-  "explanation": "Brief explanation of what the query does",
-  "columns": ["column1", "column2"],
-  "title": "Chart title",
-  "xAxis": "X axis label (if applicable)",
-  "yAxis": "Y axis label (if applicable)"
-}
-```
 
 ### Edge Cases to Handle:
 
