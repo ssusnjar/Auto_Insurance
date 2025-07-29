@@ -34,3 +34,7 @@ ai:
   prompt:
     md:
       name: prompt
+
+logging:
+  level:
+    org.springframework.ai.chat.client.advisor: DEBUG
