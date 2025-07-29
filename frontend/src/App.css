@@ -1,61 +1,107 @@
 body {
   margin: 0;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  background-color: #f6f7fb;
+  color: #333;
 }
+
 .app {
   display: flex;
-  flex-direction: row;
-  gap: 5rem;
+  min-height: 100vh;
+  background: linear-gradient(to right, #f6f7fb, #edf0f9);
 }
 
 .sidebar {
+  background-color: #fff;
+  border-right: 1px solid #dbe0ea;
+  padding: 1.5rem;
+  min-width: 240px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  align-items: start;
-  padding: 1rem 0 1rem 1rem;
-  border-right: 1px solid #ced4da;
-  min-width: 14rem;
-
-  .chat-search-section {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .history {
-    display: flex;
-    flex-direction: column;
-  }
+  gap: 1rem;
+  box-shadow: 4px 0 10px rgba(100, 100, 150, 0.05);
 }
 
-.container {
+.sidebar h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #6b5b95;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  width: 100%;
-  min-height: 100vh;
-}
-
-.data-view {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.input-section {
-  display: flex;
   gap: 0.5rem;
 }
 
-.table-section {
+.history .p-button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-weight: 500;
+  color: #6b5b95;
+  background-color: transparent;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  transition: background-color 0.2s ease;
+}
+
+.history .p-button:hover {
+  background-color: #f0eefc;
+}
+
+.container {
+  flex: 1;
+  padding: 2rem;
   display: flex;
-  flex-direction: row;
-  gap: 5rem;
   justify-content: center;
-  align-items: flex-start;
-  margin-bottom: 2rem;
+  align-items: center;
+}
+
+.data-view {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
 }
 
 
+.chart-box {
+  flex: 1;
+  min-width: 320px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+}
 
+
+.input-section {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 1.25rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.input-section .p-inputtext {
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background-color: #f9f9fb;
+  border: 1px solid #ced4da;
+}
+
+.input-section .p-button {
+  background-color: #6b5b95;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.input-section .p-button:hover {
+  background-color: #59467b;
+}
