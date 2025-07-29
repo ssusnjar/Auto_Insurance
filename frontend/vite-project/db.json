@@ -1,0 +1,14 @@
+{
+  "departments": [
+    { "id": 1, "label": "Development", "value": 120 },
+    { "id": 2, "label": "Marketing", "value": 90 },
+    { "id": 3, "label": "Sales", "value": 110 },
+    { "id": 4, "label": "Support", "value": 80 },
+    { "id": 5, "label": "HR", "value": 40 },
+    { "id": 6, "label": "Finance", "value": 60 },
+    { "id": 7, "label": "Legal", "value": 30 },
+    { "id": 8, "label": "IT", "value": 70 },
+    { "id": 9, "label": "R&D", "value": 55 },
+    { "id": 10, "label": "Operations", "value": 95 }
+  ]
+}
