@@ -79,7 +79,6 @@ public class ChatService {
 
         if (aiResponseContent != null && aiResponseContent.getQuery() != null) {
             chatResponseDTO.setVisualizationType(aiResponseContent.getVisualizationType());
-            chatResponseDTO.setExplanation(aiResponseContent.getExplanation());
             chatResponseDTO.setColumns(chatExecutorService.extractColumns(aiResponseContent.getQuery()));
             chatResponseDTO.setData(chatExecutorService.executeQuery(aiResponseContent.getQuery()));
             chatResponseDTO.setTitle(aiResponseContent.getTitle());
@@ -87,6 +86,7 @@ public class ChatService {
             chatResponseDTO.setYAxis(aiResponseContent.getYAxis());
             chatResponseDTO.setExplanation(aiResponseContent.getExplanation());
             chatResponseDTO.setQueryResponse(true);
+            chatResponseDTO.setError(false);
         } else {
             log.warn("AI response or query was null.");
             chatResponseDTO.setError(true);

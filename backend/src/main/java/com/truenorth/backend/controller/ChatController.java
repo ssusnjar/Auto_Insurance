@@ -1,7 +1,7 @@
 package com.truenorth.backend.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.truenorth.backend.dto.ChatRequest;
+import com.truenorth.backend.dto.ChatRequestDTO;
 import com.truenorth.backend.dto.ChatResponseDTO;
 import com.truenorth.backend.service.ChatService;
 import jakarta.validation.Valid;
@@ -20,7 +20,7 @@ public class ChatController {
     }
 
     @PostMapping
-    public ResponseEntity<ChatResponseDTO> handleChatMessage(@Valid @RequestBody ChatRequest request) throws JsonProcessingException {
+    public ResponseEntity<ChatResponseDTO> handleChatMessage(@Valid @RequestBody ChatRequestDTO request) throws JsonProcessingException {
 
         ChatResponseDTO response = chatService.processMessage(
                 request.getConversationId(),
