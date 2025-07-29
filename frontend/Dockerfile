@@ -1,24 +1,16 @@
-FROM node:18-alpine AS build
+FROM node:24.3
 
 WORKDIR /app
 
-COPY vite-project/package.json vite-project/package-lock.json* ./
-
+COPY package.json package-lock.json ./
 RUN npm install
 
-COPY vite-project/ .
+COPY . .
 
-RUN npm run build
+EXPOSE 5173
+CMD ["npm", "run", "dev"]
 
-FROM nginx:stable-alpine
 
-RUN rm -rf /usr/share/nginx/html/*
-
-COPY --from=build /app/dist /usr/share/nginx/html
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
 
 
 
