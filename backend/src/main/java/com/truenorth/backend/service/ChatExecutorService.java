@@ -10,18 +10,16 @@ import java.util.ArrayList;
 
 @Slf4j
 @Service
-public class QueryExecutorService {
+public class ChatExecutorService {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public QueryExecutorService(JdbcTemplate jdbcTemplate) {
+    public ChatExecutorService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
     public List<Map<String, Object>> executeQuery(String query) {
         try {
-            String trimmedQuery = query.trim().toUpperCase();
-
 
             List<Map<String, Object>> results = jdbcTemplate.queryForList(query);
 

@@ -1,7 +1,7 @@
 package com.truenorth.backend.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.truenorth.backend.dto.QueryResponse;
+import com.truenorth.backend.dto.ChatResponse;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -32,7 +32,7 @@ public class ChatService {
 
     private final ChatClient chatClient;
     private final ChatMemory chatMemory;
-    private final QueryExecutorService queryExecutorService;
+    private final ChatExecutorService chatExecutorService;
     private final ObjectMapper objectMapper;
 
     @Value("${ai.prompt.md.name}")
@@ -50,14 +50,14 @@ public class ChatService {
     }
 
     public ChatService(ChatModel chatModel, ChatMemory chatMemory,
-                       QueryExecutorService queryExecutorService) {
+                       ChatExecutorService chatExecutorService) {
         this.chatClient = ChatClient.builder(chatModel).build();
         this.chatMemory = chatMemory;
-        this.queryExecutorService = queryExecutorService;
+        this.chatExecutorService = chatExecutorService;
         this.objectMapper = new ObjectMapper();
     }
 
-    public QueryResponse processMessage(String conversationId, String userMessage) {
+    public ChatResponse processMessage(String conversationId, String userMessage) {
         chatMemory.add(conversationId, new UserMessage(userMessage));
 
         List<Message> fullHistory = chatMemory.get(conversationId);
@@ -73,15 +73,15 @@ public class ChatService {
 
         chatMemory.add(conversationId, new AssistantMessage(aiResponseContent));
 
-        QueryResponse response = parseQueryResponse(aiResponseContent);
+        ChatResponse response = parseQueryResponse(aiResponseContent);
 
         if (response.isQueryResponse() && response.getQuery() != null) {
             try {
-                List<Map<String, Object>> queryResults = queryExecutorService.executeQuery(response.getQuery());
+                List<Map<String, Object>> queryResults = chatExecutorService.executeQuery(response.getQuery());
                 response.setData(queryResults);
 
                 if (response.getColumns() == null || response.getColumns().isEmpty()) {
-                    response.setColumns(queryExecutorService.extractColumns(response.getQuery()));
+                    response.setColumns(chatExecutorService.extractColumns(response.getQuery()));
                 }
 
                 log.info("Query executed successfully with {} results", queryResults.size());
@@ -95,8 +95,8 @@ public class ChatService {
         return response;
     }
 
-    private QueryResponse parseQueryResponse(String aiResponse) {
-        QueryResponse response = new QueryResponse();
+    private ChatResponse parseQueryResponse(String aiResponse) {
+        ChatResponse response = new ChatResponse();
         response.setQueryResponse(false);
 
         Pattern jsonPattern = Pattern.compile("```json\\s*\\n([\\s\\S]*?)\\n\\s*```", Pattern.MULTILINE);

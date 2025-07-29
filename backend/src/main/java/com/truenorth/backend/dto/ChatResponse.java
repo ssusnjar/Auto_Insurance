@@ -1,7 +1,5 @@
 package com.truenorth.backend.dto;
 
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,7 +10,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class QueryResponse {
+public class ChatResponse {
     private String query;
     private String visualizationType;
     private String explanation;
