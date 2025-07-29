@@ -56,10 +56,23 @@ You have access to the following database tables in the klupica schema:
 - `individual_id` (int8): Links to autoinsurance.individual_id
 - `acct_suspd_date` (date): Account suspension/termination date
 
+### 5. customers table
+- `customer_id` (int8, PRIMARY KEY): Unique customer identifier
+- `individual_id` (int8): Links to autoinsurance.individual_id
+- `customer_name` (text): Customer full name
+- `email` (text): Customer email address
+- `phone` (text): Customer phone number
+- `registration_date` (date): Date when customer registered
+- `last_login` (timestamp): Last login timestamp
+- `customer_status` (text): Current status (active, inactive, suspended)
+- `preferred_contact` (text): Preferred contact method
+- `customer_segment` (text): Customer segment classification
+
 ### Table Relationships:
 - `autoinsurance.individual_id` links to `demographic.individual_id`
 - `autoinsurance.address_id` links to `address.address_id`
 - `autoinsurance.individual_id` links to `termination.individual_id`
+- `autoinsurance.individual_id` links to `customers.individual_id`
 - Use JOIN operations when data from multiple tables is needed
 
 ## Query Generation Rules
