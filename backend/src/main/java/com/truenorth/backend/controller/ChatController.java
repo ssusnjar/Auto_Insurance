@@ -24,19 +24,6 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    @Operation(
-            summary = "Send a user message and receive a database query response",
-            description = """
-                Accepts a natural language message (e.g. "Prikaži mi prosječni iznos plaćen za korisnike koji imaju djecu") 
-                and returns the AI-generated SQL query, suggested chart type, explanation, axis labels, and result data.
-                The backend interprets user intent, generates SQL, executes it, and returns both the query and visualization info.
-                """
-    )
-    @ApiResponse(
-            responseCode = "200",
-            description = "Successfully generated a query and returned results",
-            content = @Content(schema = @Schema(implementation = QueryResponse.class))
-    )
     @PostMapping
     public ResponseEntity<QueryResponse> handleChatMessage(@Valid @RequestBody ChatRequest request) {
 
