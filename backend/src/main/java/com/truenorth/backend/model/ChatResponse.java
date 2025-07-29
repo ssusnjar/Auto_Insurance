@@ -40,29 +40,61 @@ public class ChatResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ChartConfig {
+        @JsonProperty("title")
         private String title;
+
+        @JsonProperty("subtitle")
         private String subtitle;
 
+        @JsonProperty("columns")
         private String[] columns;
+
+        @JsonProperty("columnLabels")
         private Map<String, String> columnLabels;
 
+        @JsonProperty("xAxisLabel")
         private String xAxisLabel;
+
+        @JsonProperty("yAxisLabel")
         private String yAxisLabel;
+
+        @JsonProperty("xAxisField")
         private String xAxisField;
+
+        @JsonProperty("yAxisField")
         private String yAxisField;
+
+        @JsonProperty("seriesFields")
         private String[] seriesFields;
 
+        @JsonProperty("labelField")
         private String labelField;
+
+        @JsonProperty("valueField")
         private String valueField;
 
+        @JsonProperty("xField")
         private String xField;
+
+        @JsonProperty("yField")
         private String yField;
+
+        @JsonProperty("sizeField")
         private String sizeField;
+
+        @JsonProperty("categoryField")
         private String categoryField;
 
+        @JsonProperty("showLegend")
         private boolean showLegend;
+
+        @JsonProperty("showDataLabels")
         private boolean showDataLabels;
+
+        @JsonProperty("legendPosition")
         private String legendPosition;
+
+        @JsonProperty("additionalOptions")
         private Map<String, Object> additionalOptions;
     }
 }
