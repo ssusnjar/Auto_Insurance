@@ -1,8 +1,20 @@
-FROM node:18
-WORKDIR /app
-COPY . .
-RUN npm install
-RUN npm run build
+FROM node:24.3
 
-EXPOSE 3000
-CMD ["npm", "start"]
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 5173
+CMD ["npm", "run", "dev"]
+
+
+
+
+
+
+
+
+

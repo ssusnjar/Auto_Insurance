@@ -1,0 +1,61 @@
+body {
+  margin: 0;
+}
+.app {
+  display: flex;
+  flex-direction: row;
+  gap: 5rem;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: start;
+  padding: 1rem 0 1rem 1rem;
+  border-right: 1px solid #ced4da;
+  min-width: 14rem;
+
+  .chat-search-section {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .history {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.data-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.input-section {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.table-section {
+  display: flex;
+  flex-direction: row;
+  gap: 5rem;
+  justify-content: center;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+
+

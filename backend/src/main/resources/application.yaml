@@ -12,7 +12,7 @@ spring:
             initialize-schema: never
 
   datasource:
-    url: jdbc:postgresql://db-postgresql-fra1-85342-do-user-24244176-0.l.db.ondigitalocean.com:25060/defaultdb
+    url: jdbc:postgresql://${HOST}:${PORT}/${DB}
     username: tim2
     password: ${DATABASE_PASSWORD}
 
