@@ -5,11 +5,9 @@ import com.truenorth.backend.dto.ChatResponse;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -30,7 +28,8 @@ import java.util.regex.Pattern;
 @Service
 public class ChatService {
 
-    private final ChatClient chatClient;
+    private final ChatModel chatModel;
+    private  ChatClient chatClient;
     private final ChatMemory chatMemory;
     private final ChatExecutorService chatExecutorService;
     private final ObjectMapper objectMapper;
@@ -38,40 +37,40 @@ public class ChatService {
     @Value("${ai.prompt.md.name}")
     private String promptFileName;
 
-    private String systemPromptString;
-
     @PostConstruct
     public void init() throws IOException {
         Resource systemPromptResource = new ClassPathResource("prompts/" + promptFileName + ".md");
+        String systemPromptString;
         try (Reader reader = new InputStreamReader(systemPromptResource.getInputStream(), StandardCharsets.UTF_8)) {
-            this.systemPromptString = FileCopyUtils.copyToString(reader);
+            systemPromptString = FileCopyUtils.copyToString(reader);
         }
         log.info("Loaded prompt file: {}", promptFileName);
+
+        this.chatClient = ChatClient.builder(this.chatModel)
+                .defaultSystem(systemPromptString)
+                .build();
     }
+
 
     public ChatService(ChatModel chatModel, ChatMemory chatMemory,
                        ChatExecutorService chatExecutorService) {
-        this.chatClient = ChatClient.builder(chatModel).build();
         this.chatMemory = chatMemory;
         this.chatExecutorService = chatExecutorService;
         this.objectMapper = new ObjectMapper();
+        this.chatModel = chatModel;
     }
 
     public ChatResponse processMessage(String conversationId, String userMessage) {
-        chatMemory.add(conversationId, new UserMessage(userMessage));
 
-        List<Message> fullHistory = chatMemory.get(conversationId);
         log.info("Processing message for conversation: {}", conversationId);
 
         String aiResponseContent = Optional.ofNullable(
                 chatClient.prompt()
-                        .system(this.systemPromptString)
-                        .messages(fullHistory)
+                        .user(userMessage)
+                        .advisors(MessageChatMemoryAdvisor.builder(chatMemory).conversationId(conversationId).build())
                         .call()
                         .content()
         ).orElse("");
-
-        chatMemory.add(conversationId, new AssistantMessage(aiResponseContent));
 
         ChatResponse response = parseQueryResponse(aiResponseContent);
 
@@ -118,15 +117,6 @@ public class ChatService {
 
             } catch (Exception e) {
                 log.error("Error parsing query response JSON", e);
-            }
-        } else {
-            Pattern sqlPattern = Pattern.compile("```sql\\s*\\n([\\s\\S]*?)\\n\\s*```", Pattern.MULTILINE);
-            Matcher sqlMatcher = sqlPattern.matcher(aiResponse);
-
-            if (sqlMatcher.find()) {
-                response.setQuery(sqlMatcher.group(1).trim());
-                response.setQueryResponse(true);
-                response.setVisualizationType("table");
             }
         }
 
