@@ -5,6 +5,7 @@ import com.truenorth.backend.dto.ChatResponse;
 import com.truenorth.backend.service.ChatService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,8 +26,7 @@ public class ChatController {
 
         ChatResponse response = chatService.processMessage(
                 request.getConversationId(),
-                request.getMessage()
-        );
+                request.getMessage());
 
         return ResponseEntity.ok(response);
     }

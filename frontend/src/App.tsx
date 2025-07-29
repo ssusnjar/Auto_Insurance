@@ -21,19 +21,26 @@ export default function App() {
 
   const handleClick = () => {
     setLoading(true);
-
-    fetch(`http://localhost:3001/citiesData/${value}`)
+    fetch("http://localhost:8080/api/v1/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: "Pokaži kako se krece cijena u odnosu na godine",
+      }),
+    })
       .then((res) => res.json())
       .then((data) => {
-        const newData = {
-          labels: data.salaries.map((el: any) => el.label),
-          id: data.salaries.map((el: any) => el.id),
+        console.log("data", data);
+        setChartData({
+          labels: data.map((el: any) => el.label),
           datasets: [
             {
               data: data.salaries.map((el: any) => el.value),
             },
           ],
-        };
+        });
 
         setChartData(newData);
         setHistory((prev) => [...prev, { id: historyId, input: value }]);
