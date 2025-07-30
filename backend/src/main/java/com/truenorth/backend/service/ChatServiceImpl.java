@@ -1,7 +1,9 @@
 package com.truenorth.backend.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.truenorth.backend.dto.ChatResponseDTO;
+import com.truenorth.backend.exception.SqlQueryFailedException;
 import com.truenorth.backend.model.ChatHistory;
 import com.truenorth.backend.model.ChatResponse;
 import com.truenorth.backend.repository.ChatHistoryRepository;
@@ -10,13 +12,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
 
@@ -34,6 +38,7 @@ import java.util.stream.Collectors;
 public class ChatServiceImpl implements ChatService {
 
     private final ChatClient chatClient;
+    private final ChatClient fallbackChatClient;
     private final ChatMemory chatMemory;
     private final ObjectMapper objectMapper;
     private final ChatExecutorService chatExecutorService;
@@ -53,13 +58,15 @@ public class ChatServiceImpl implements ChatService {
         log.info("Loaded prompt file: {}", promptFileName);
     }
 
-    public ChatServiceImpl(ChatModel chatModel, ChatMemory chatMemory, ChatExecutorService chatExecutorService,
-                           ObjectMapper objectMapper, ChatHistoryRepository chatHistoryRepository) {
-        this.chatClient = ChatClient.builder(chatModel).build();
+    public ChatServiceImpl(ChatMemory chatMemory, ChatExecutorService chatExecutorService,
+                           ObjectMapper objectMapper, ChatHistoryRepository chatHistoryRepository,
+                           ChatClient chatClient, @Qualifier("fallbackChatClient") ChatClient fallbackChatClient) {
         this.chatMemory = chatMemory;
         this.objectMapper = objectMapper;
         this.chatExecutorService = chatExecutorService;
         this.chatHistoryRepository = chatHistoryRepository;
+        this.chatClient = chatClient;
+        this.fallbackChatClient = fallbackChatClient;
     }
 
     @Override
@@ -78,9 +85,8 @@ public class ChatServiceImpl implements ChatService {
         chatMemory.add(conversationId, new UserMessage(userMessage));
         List<Message> fullHistory = chatMemory.get(conversationId);
 
-        log.info("Processing message for conversation: {} - Message: {}", conversationId, userMessage);
-
         try {
+            log.info("Processing message with primary client for conversation: {}", conversationId);
             ChatResponse aiResponse = chatClient.prompt()
                     .system(this.systemPromptString)
                     .messages(fullHistory)
@@ -89,19 +95,48 @@ public class ChatServiceImpl implements ChatService {
                     .entity(ChatResponse.class);
 
             ChatResponseDTO dto = convertToDTO(aiResponse);
-
             chatMemory.add(conversationId, new AssistantMessage(objectMapper.writeValueAsString(dto)));
-
             dto.setConversationId(conversationId);
             return dto;
 
+        } catch (SqlQueryFailedException e) {
+            log.warn("Primary AI generated invalid SQL. Query: '{}'. Error: '{}'. Attempting fallback.", e.getFailedQuery(), e.getMessage());
+
+            String recoveryInstruction = String.format(
+                    "The previous attempt to generate an SQL query failed. Please correct it. " +
+                            "The failed SQL query was: ```sql\n%s\n```" +
+                            "The database error was: '%s'. " +
+                            "Analyze the user's request, the conversation history, and the error to generate a new, corrected, and valid response.",
+                    e.getFailedQuery(), e.getMessage()
+            );
+
+            fullHistory.add(new UserMessage(recoveryInstruction));
+
+            try {
+                log.info("Invoking fallback client for conversation: {}", conversationId);
+                ChatResponse fallbackAiResponse = fallbackChatClient.prompt()
+                        .system(this.systemPromptString)
+                        .messages(fullHistory)
+                        .advisors(new SimpleLoggerAdvisor())
+                        .call()
+                        .entity(ChatResponse.class);
+
+                ChatResponseDTO dto = convertToDTO(fallbackAiResponse);
+                chatMemory.add(conversationId, new AssistantMessage(objectMapper.writeValueAsString(dto)));
+                dto.setConversationId(conversationId);
+                return dto;
+
+            } catch (Exception fallbackException) {
+                log.error("Fallback client also failed to generate a valid response.", fallbackException);
+                return createErrorResponse("We tried to recover from an error, but were unable to process your request. Please try rephrasing your question.");
+            }
         } catch (Exception e) {
-            log.error("Error processing message: ", e);
-            return createErrorResponse("An error occurred while processing your request. Please try again.");
+            log.error("An unexpected error occurred while processing message: ", e);
+            return createErrorResponse("An unexpected error occurred. Please try again.");
         }
     }
 
-    private ChatResponseDTO convertToDTO(ChatResponse aiResponse) {
+    private ChatResponseDTO convertToDTO(ChatResponse aiResponse) throws SqlQueryFailedException, JsonProcessingException {
         ChatResponseDTO dto = new ChatResponseDTO();
 
         if (aiResponse == null || !aiResponse.isValid()) {
@@ -124,17 +159,16 @@ public class ChatServiceImpl implements ChatService {
             dto.setVisualizationType(aiResponse.getVisualizationType());
             dto.setExplanation(aiResponse.getExplanation());
             dto.setValid(true);
-
             dto.setChartConfig(convertChartConfig(aiResponse.getChartConfig()));
 
         } catch (Exception e) {
-            log.error("Error executing query or mapping response: ", e);
-            dto.setValid(false);
-            dto.setErrorMessage("Error executing database query: " + e.getMessage());
+            String errorMessage = e.getMessage();
+            log.warn("SQL query execution failed. Query: [{}], Error: [{}]", aiResponse.getQuery(), errorMessage);
+            throw new SqlQueryFailedException(errorMessage, e, aiResponse.getQuery());
         }
-
         return dto;
     }
+
 
     private ChatResponseDTO.ChartConfigDTO convertChartConfig(ChatResponse.ChartConfig config) {
         if (config == null) return null;

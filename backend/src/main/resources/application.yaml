@@ -5,6 +5,8 @@ spring:
       chat:
         options:
           model: devstral-small-latest
+          fallback-model: devstral-medium-latest
+          temperature: 0.7
     chat:
       memory:
         repository:
