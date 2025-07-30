@@ -309,6 +309,7 @@ export default function App() {
 
                 {chartType === "table" && tableData.length > 0 && (
                   <Card className="chart-box">
+                    <h2>{chartTitle}</h2>
                     <table className="custom-table">
                       <thead>
                         <tr>
