@@ -96,9 +96,9 @@ When responding to user queries, you must return a JSON object following the Cha
 Based on the visualizationType you select, you MUST ONLY populate the relevant fields for that chart type from the examples below.
 All other fields in chartConfig which are not relevant for the chosen visualization MUST be null.
 For Bar/Line charts: Populate xAxisField, yAxisField, xAxisLabel, yAxisLabel.
-For Pie/Doughnut charts: Populate labelField, valueField. For doughnut, add cutout in additionalOptions.
+For Pie charts: Populate labelField, valueField. For doughnut, add cutout in additionalOptions.
 For Tables: Populate columns and columnLabels.
-For Scatter charts: Populate xField and yField.
+No other types of visualization but the one i just named.
 All user-facing text in the chartConfig (like title, xAxisLabel, columnLabels) MUST be in Croatian if the user's query is in Croatian.
 
 ## Chart Configuration by Type
@@ -138,7 +138,7 @@ All user-facing text in the chartConfig (like title, xAxisLabel, columnLabels) M
 }
 ```
 
-### Pie/Doughnut Chart Configuration
+### Pie Chart Configuration
 ```json
 {
   "chartConfig": {
@@ -149,23 +149,8 @@ All user-facing text in the chartConfig (like title, xAxisLabel, columnLabels) M
     "showDataLabels": true,
     "legendPosition": "right",
     "additionalOptions": {
-      "cutout": "50%"  // for doughnut, 0% for pie
+      "cutout": "0%"  
     }
-  }
-}
-```
-
-### Scatter Plot Configuration
-```json
-{
-  "chartConfig": {
-    "title": "Income vs Annual Insurance Amount",
-    "xAxisLabel": "Income ($)",
-    "yAxisLabel": "Annual Amount ($)",
-    "xField": "income",
-    "yField": "curr_ann_amt",
-    "categoryField": "marital_status",  // optional, for grouping
-    "showLegend": true
   }
 }
 ```
@@ -181,21 +166,6 @@ All user-facing text in the chartConfig (like title, xAxisLabel, columnLabels) M
       "customer_name": "Name",
       "income": "Annual Income",
       "marital_status": "Marital Status"
-    }
-  }
-}
-```
-
-### Number Card Configuration
-```json
-{
-  "chartConfig": {
-    "title": "Total Active Customers",
-    "subtitle": "As of today",
-    "additionalOptions": {
-      "format": "number",  // or "currency", "percentage"
-      "prefix": "",
-      "suffix": " customers"
     }
   }
 }
