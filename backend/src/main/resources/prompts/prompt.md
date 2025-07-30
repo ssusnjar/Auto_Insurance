@@ -7,12 +7,111 @@
 
 **⚠️ CRITICAL: This is a PostgreSQL database. Follow PostgreSQL syntax strictly!**
 
-### PostgreSQL Syntax Rules (MUST FOLLOW):
-1. **Date Casting**: Use `column_name::date` or `CAST(column_name AS date)` - NEVER use `TO_DATE()`
-2. **Boolean Values**: Use `field = true` or `field = false` - NEVER use `= 1` or `= 0`
-3. **String Casting**: Use `column_name::text` or `::numeric` for type conversion
-4. **Case Sensitivity**: Always use `LOWER(column_name) = 'value'` for text comparisons
-5. **Limits**: Use `LIMIT n` - NEVER use `TOP n`
+### **Comprehensive PostgreSQL AI Query Generation Rules**
+
+#### **Category 1: Data Types & Casting (Your Rules, Refined)**
+
+1.  **Date/Timestamp Casting**: Always use the standard PostgreSQL cast operator `::`. It is concise and idiomatic.
+   *   **✅ Correct**: `created_at::date`, `CAST(order_date AS timestamp)`
+   *   **❌ Incorrect**: `TO_DATE(created_at, 'YYYY-MM-DD')`, `CONVERT(date, created_at)`
+
+2.  **Boolean Logic**: The `boolean` type is native. Use the keywords `true` and `false` directly for comparisons and assignments.
+   *   **✅ Correct**: `WHERE is_active = true` or `WHERE is_shipped = false`
+   *   **❌ Incorrect**: `WHERE is_active = 1` or `WHERE is_shipped = 0`
+
+3.  **General Type Casting**: Use the `::` operator for all common type conversions (text, numeric, integer, etc.).
+   *   **✅ Correct**: `amount::numeric(10, 2)`, `zip_code::text`, `id::integer`
+   *   **❌ Incorrect**: `CAST(zip_code AS VARCHAR)`, `CONVERT(int, id)`
+
+#### **Category 2: Comparisons & Filtering (Your Rules, Expanded)**
+
+4.  **Case-Insensitive Text Comparison**: For equality checks, always use the `LOWER()` function on both the column and the value to ensure case-insensitivity. For pattern matching, use `ILIKE`.
+   *   **✅ Correct**: `WHERE LOWER(email) = 'user@example.com'`
+   *   **✅ Correct**: `WHERE name ILIKE 'john%'`
+   *   **❌ Incorrect**: `WHERE email = 'User@example.com'` (This is case-sensitive and will fail)
+   *   **❌ Incorrect**: `WHERE LOWER(name) LIKE 'john%'` (`ILIKE` is more efficient and cleaner)
+
+5.  **NULL Value Checking**: `NULL` represents an unknown state, not a value. It can only be checked with `IS NULL` or `IS NOT NULL`.
+   *   **✅ Correct**: `WHERE shipped_at IS NULL` or `WHERE manager_id IS NOT NULL`
+   *   **✅ Correct**: Use `COALESCE(column, 'default_value')` to provide a fallback for NULL values.
+   *   **❌ Incorrect**: `WHERE shipped_at = NULL` (This will never return true)
+
+6.  **Date/Interval Arithmetic**: Perform arithmetic on one side of the comparison to keep logic clear and sargable (index-friendly).
+   *   **✅ Correct**: `WHERE created_at >= NOW() - INTERVAL '30 days'`
+   *   **✅ Correct**: `WHERE start_date <= end_date + INTERVAL '1 year'`
+   *   **❌ Incorrect**: `WHERE NOW() - created_at <= INTERVAL '30 days'` (Less readable and potentially slower)
+
+#### **Category 3: Query Structure & Readability**
+
+7.  **Use Explicit `JOIN` Syntax**: Always use the ANSI SQL-92 `JOIN` syntax (`INNER JOIN`, `LEFT JOIN`, etc.). The implicit comma-join syntax is archaic and dangerously prone to accidental cross-joins.
+   *   **✅ Correct**: `FROM orders o JOIN customers c ON o.customer_id = c.id`
+   *   **❌ Incorrect**: `FROM orders o, customers c WHERE o.customer_id = c.id`
+
+8.  **Always Use Column and Table Aliases**: Use clear, concise aliases for all tables (`users u`) and use the `AS` keyword for all column aliases (`count(*) AS total_users`). This improves readability and prevents ambiguity.
+   *   **✅ Correct**: `SELECT u.id, p.name AS product_name FROM users AS u LEFT JOIN products AS p ON u.last_product_id = p.id`
+   *   **❌ Incorrect**: `SELECT id, name FROM users LEFT JOIN products ON users.last_product_id = products.id`
+
+9.  **Prefer Common Table Expressions (CTEs) for Complex Queries**: For any query involving more than one level of subquery, use a `WITH` clause (CTE). It drastically improves readability and maintainability.
+   *   **✅ Correct**:
+       ```sql
+       WITH user_orders AS (
+         SELECT user_id, count(*) AS order_count
+         FROM orders
+         GROUP BY user_id
+       )
+       SELECT u.email, uo.order_count
+       FROM users u
+       JOIN user_orders uo ON u.id = uo.user_id;
+       ```
+   *   **❌ Incorrect**:
+       ```sql
+       SELECT u.email, uo.order_count
+       FROM users u
+       JOIN (SELECT user_id, count(*) AS order_count FROM orders GROUP BY user_id) uo
+       ON u.id = uo.user_id;
+       ```
+
+#### **Category 4: Performance & Safety**
+
+10. **Avoid `SELECT *` in Production Code**: Always explicitly list the columns you need. This makes queries more readable, resilient to schema changes, and reduces network overhead.
+   *   **✅ Correct**: `SELECT user_id, name, email FROM users;`
+   *   **❌ Incorrect**: `SELECT * FROM users;`
+
+11. **Use `LIMIT` for Row Capping**: PostgreSQL uses `LIMIT`. The `OFFSET` clause can be used for pagination.
+   *   **✅ Correct**: `SELECT * FROM products ORDER BY price DESC LIMIT 10;`
+   *   **✅ Correct**: `SELECT * FROM logs ORDER BY event_time DESC LIMIT 50 OFFSET 100;`
+   *   **❌ Incorrect**: `SELECT TOP 10 * FROM products...`
+
+12. **Quote Identifiers Only When Necessary**: Standard SQL identifiers (lowercase, no spaces/special characters) do not need quotes. If you must use case-sensitive names or special characters, use double quotes (`"`). Never use single quotes (`'`) or backticks (`` ` ``) for identifiers.
+   *   **✅ Correct**: `SELECT id FROM user_profiles;`
+   *   **✅ Correct**: `SELECT "user-id", "lastName" FROM "Users";` (Only if the table/columns were created this way)
+   *   **❌ Incorrect**: `SELECT 'id' FROM `user_profiles`;`
+
+#### **Category 5: PostgreSQL-Specific Features (Leverage the Power)**
+
+13. **Use `RETURNING` for DML Operations**: When inserting, updating, or deleting, use the `RETURNING` clause to get values from the modified rows without a second query.
+   *   **✅ Correct**: `INSERT INTO users (name, email) VALUES ('John Doe', 'john.doe@new.com') RETURNING id, created_at;`
+   *   **✅ Correct**: `UPDATE products SET stock = stock - 1 WHERE id = 123 RETURNING id, stock;`
+   *   **❌ Incorrect**: `INSERT INTO users...; SELECT id FROM users WHERE email = '...';`
+
+14. **Use `ON CONFLICT` for "Upserts"**: For `INSERT` statements that might violate a unique constraint, use `ON CONFLICT` to define an alternative action (`DO NOTHING` or `DO UPDATE`).
+   *   **✅ Correct**:
+       ```sql
+       INSERT INTO user_stats (user_id, login_count) VALUES (1, 1)
+       ON CONFLICT (user_id) DO UPDATE SET login_count = user_stats.login_count + 1;
+       ```
+   *   **❌ Incorrect**: Manually checking with a `SELECT` then deciding between `INSERT` or `UPDATE`.
+
+15. **Use `DISTINCT ON` for "Greatest-N-Per-Group"**: To get the first row for each distinct value of a column, `DISTINCT ON` is far more efficient and readable than window functions or subqueries. The `ORDER BY` clause is critical.
+   *   **✅ Correct**:
+       ```sql
+       -- Get the latest action for each user
+       SELECT DISTINCT ON (user_id) user_id, action, created_at
+       FROM user_actions
+       ORDER BY user_id, created_at DESC;
+       ```
+   *   **❌ Incorrect**: Using complex subqueries with `ROW_NUMBER()` for this specific task.
+
 
 ### CRITICAL: Date Field Handling
 **These fields are TEXT in 'YYYY-MM-DD' format:**
