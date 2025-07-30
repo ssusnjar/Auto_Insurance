@@ -2,7 +2,9 @@ package com.truenorth.backend.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.truenorth.backend.dto.ChatResponseDTO;
+import com.truenorth.backend.model.ChatHistory;
 import com.truenorth.backend.model.ChatResponse;
+import com.truenorth.backend.repository.ChatHistoryRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -35,6 +37,7 @@ public class ChatServiceImpl implements ChatService {
     private final ChatMemory chatMemory;
     private final ObjectMapper objectMapper;
     private final ChatExecutorService chatExecutorService;
+    private final ChatHistoryRepository chatHistoryRepository;
 
     @Value("${ai.prompt.md.name}")
     private String promptFileName;
@@ -50,17 +53,25 @@ public class ChatServiceImpl implements ChatService {
         log.info("Loaded prompt file: {}", promptFileName);
     }
 
-    public ChatServiceImpl(ChatModel chatModel, ChatMemory chatMemory, ChatExecutorService chatExecutorService, ObjectMapper objectMapper) {
+    public ChatServiceImpl(ChatModel chatModel, ChatMemory chatMemory, ChatExecutorService chatExecutorService,
+                           ObjectMapper objectMapper, ChatHistoryRepository chatHistoryRepository) {
         this.chatClient = ChatClient.builder(chatModel).build();
         this.chatMemory = chatMemory;
         this.objectMapper = objectMapper;
         this.chatExecutorService = chatExecutorService;
+        this.chatHistoryRepository = chatHistoryRepository;
     }
 
     @Override
     public ChatResponseDTO processMessage(String conversationId, String userMessage) {
         if (conversationId == null || conversationId.isBlank()) {
             conversationId = UUID.randomUUID().toString();
+
+            ChatHistory chatHistory = new ChatHistory();
+            chatHistory.setConversationId(conversationId);
+            chatHistory.setTitle(userMessage);
+            chatHistoryRepository.save(chatHistory);
+
             log.info("Generated new conversation ID: {}", conversationId);
         }
 
@@ -77,9 +88,11 @@ public class ChatServiceImpl implements ChatService {
                     .call()
                     .entity(ChatResponse.class);
 
-            chatMemory.add(conversationId, new AssistantMessage(objectMapper.writeValueAsString(aiResponse)));
+            ChatResponseDTO dto = convertToDTO(aiResponse);
 
-            return convertToDTO(aiResponse);
+            chatMemory.add(conversationId, new AssistantMessage(objectMapper.writeValueAsString(dto)));
+
+            return dto;
 
         } catch (Exception e) {
             log.error("Error processing message: ", e);

@@ -1,13 +1,18 @@
 package com.truenorth.backend.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.truenorth.backend.dto.ChatHistoryDTO;
 import com.truenorth.backend.dto.ChatRequestDTO;
 import com.truenorth.backend.dto.ChatResponseDTO;
+import com.truenorth.backend.service.ChatHistoryService;
 import com.truenorth.backend.service.ChatService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/chat")
@@ -16,8 +21,9 @@ import org.springframework.web.bind.annotation.*;
 public class ChatController {
 
     private final ChatService chatService;
+    private final ChatHistoryService chatHistoryService;
 
-    @PostMapping
+    @PostMapping("/message")
     public ResponseEntity<ChatResponseDTO> handleChatMessage(@Valid @RequestBody ChatRequestDTO request) throws JsonProcessingException {
 
         ChatResponseDTO response = chatService.processMessage(
@@ -26,5 +32,15 @@ public class ChatController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/history")
+    public Page<ChatHistoryDTO> getConversationHistory(@RequestParam(defaultValue = "20") Integer limit, @RequestParam(defaultValue = "0") Integer page) {
+        return chatHistoryService.getAllChatHistory(page, limit);
+    }
+
+    @GetMapping("history/{id}")
+    public List<ChatResponseDTO> getConversationHistoryById(@PathVariable String id) throws JsonProcessingException {
+        return List.of(new ChatResponseDTO());
     }
 }
