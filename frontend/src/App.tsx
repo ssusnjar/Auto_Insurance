@@ -7,6 +7,9 @@ import { Chart } from "primereact/chart";
 import { Divider } from "primereact/divider";
 import { Card } from "primereact/card";
 
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+
 interface History {
   id: number;
   input: string;
@@ -27,33 +30,73 @@ export default function App() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        message: "Pokaži kako se krece cijena u odnosu na godine",
+        message: value,
       }),
     })
       .then((res) => res.json())
       .then((data) => {
-        console.log("data", data);
-        setChartData({
-          labels: data.map((el: any) => el.label),
-          datasets: [
-            {
-              data: data.salaries.map((el: any) => el.value),
-            },
-          ],
+        const columns = Object.keys(data.data[0]);
+        console.log(columns);
+
+        const rows = data.data;
+
+        // Prepare pie chart data dynamically
+        if (data.visualizationType === "pie") {
+          const labels = rows.map((row) => {
+            return row[columns[0]];
+          });
+
+          const values = rows.map((row) => row[columns[2]] || row[columns[1]]);
+          console.log(labels);
+          console.log(values);
+
+          setChartData({
+            labels,
+            datasets: [
+              {
+                data: values,
+              },
+            ],
+          });
+        }
+
+        // data.data.forEach((entry)=>)
+        /*
+        const columnsArray = data.columns.map((el) => el);
+        console.log(columnsArray);
+
+        columnsArray.forEach(arrEl => {
+          
+          setChartData({
+          
+            labels: data.data.map(el=>el.arrEl),
+            datasets: [
+              {
+                data: data.salaries.map((el: any) => el.),
+              },
+            ],
+          });
         });
+
+
+        console.log(chartData);
 
         setChartData(newData);
         setHistory((prev) => [...prev, { id: historyId, input: value }]);
         setHistoryId(historyId + 1);
+        setValue("");*/
         setLoading(false);
-        setValue("");
       });
   };
 
   const handleHistoryClick = (input: string) => {
     fetch(`http://localhost:3001/citiesData/${input}`)
-      .then((res) => res.json())
+      .then((res) => {
+        res.json();
+        console.log("res", res);
+      })
       .then((data) => {
+        console.log(data);
         const newData = {
           labels: data.salaries.map((el: any) => el.label),
           id: data.salaries.map((el: any) => el.id),
