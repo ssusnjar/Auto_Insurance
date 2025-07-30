@@ -12,12 +12,55 @@ import java.util.Map;
 @AllArgsConstructor
 public class ChatResponseDTO {
     private String visualizationType;
+    private ChartConfigDTO chartConfig;
     private String explanation;
-    private List<String> columns;
+
     private List<Map<String, Object>> data;
-    private String title;
-    private String xAxis;
-    private String yAxis;
-    private boolean isQueryResponse;
-    private boolean error;
+    private DataSummary summary;
+
+    private boolean isValid;
+    private String errorMessage;
+    private String conversationId;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ChartConfigDTO {
+        private String title;
+        private String subtitle;
+
+        private List<String> columns;
+        private Map<String, String> columnLabels;
+
+        private String xAxisLabel;
+        private String yAxisLabel;
+        private String xAxisField;
+        private String yAxisField;
+        private List<String> seriesFields;
+
+        private String labelField;
+        private String valueField;
+
+        private String xField;
+        private String yField;
+        private String sizeField;
+        private String categoryField;
+
+        private boolean showLegend;
+        private boolean showDataLabels;
+        private String legendPosition;
+        private Map<String, Object> additionalOptions;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DataSummary {
+        private Long totalRecords;
+        private Double total;
+        private Double average;
+        private Double min;
+        private Double max;
+        private Map<String, Object> additionalStats;
+    }
 }

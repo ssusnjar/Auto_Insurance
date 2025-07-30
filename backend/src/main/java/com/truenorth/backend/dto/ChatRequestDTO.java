@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatRequest {
+public class ChatRequestDTO {
     @NotBlank(message = "Message cannot be null or empty.")
     private String message;
     private String conversationId;
