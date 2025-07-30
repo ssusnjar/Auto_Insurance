@@ -31,6 +31,11 @@ body {
   gap: 0.5rem;
 }
 
+.history {
+  display: flex;
+  flex-direction: column;
+}
+
 .history .p-button {
   display: block;
   width: 100%;
@@ -64,17 +69,15 @@ body {
   gap: 2.5rem;
 }
 
-
 .chart-box {
   flex: 1;
-  min-width: 320px;
+  min-width: 600px;
   background-color: #ffffff;
   border-radius: 16px;
   padding: 1.25rem;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
   border: 1px solid #e2e8f0;
 }
-
 
 .input-section {
   display: flex;
