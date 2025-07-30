@@ -108,7 +108,12 @@ export default function App() {
           });
           setChartType("pie");
         } else if (type === "line" || type === "bar") {
-          const xLabels = rows.map(() => " ");
+          const labelKey =
+            columns.find((col) => typeof rows[0][col] === "string") ||
+            columns[0];
+
+          const xLabels = rows.map((row) => String(row[labelKey]));
+
           const numericKeys = columns.filter(
             (key) => typeof rows[0][key] === "number"
           );
@@ -193,7 +198,11 @@ export default function App() {
           });
           setChartType("pie");
         } else if (type === "line" || type === "bar") {
-          const xLabels = rows.map((_, index) => `Item ${index + 1}`);
+          const labelKey =
+            columns.find((col) => typeof rows[0][col] === "string") ||
+            columns[0];
+
+          const xLabels = rows.map((row) => String(row[labelKey]));
           const numericKeys = columns.filter(
             (key) => typeof rows[0][key] === "number"
           );
