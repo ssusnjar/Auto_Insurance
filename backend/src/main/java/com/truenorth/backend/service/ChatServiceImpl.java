@@ -37,6 +37,8 @@ import java.util.stream.Collectors;
 @Service
 public class ChatServiceImpl implements ChatService {
 
+    private static final int MAX_RETRY_ATTEMPTS = 2;
+
     private final ChatClient chatClient;
     private final ChatClient fallbackChatClient;
     private final ChatMemory chatMemory;
@@ -95,45 +97,113 @@ public class ChatServiceImpl implements ChatService {
                     .entity(ChatResponse.class);
 
             ChatResponseDTO dto = convertToDTO(aiResponse);
-            chatMemory.add(conversationId, new AssistantMessage(objectMapper.writeValueAsString(dto)));
+            chatMemory.add(conversationId, new AssistantMessage(objectMapper.writeValueAsString(aiResponse)));
             dto.setConversationId(conversationId);
             return dto;
 
         } catch (SqlQueryFailedException e) {
-            log.warn("Primary AI generated invalid SQL. Query: '{}'. Error: '{}'. Attempting fallback.", e.getFailedQuery(), e.getMessage());
+            log.warn("Primary AI generated invalid SQL. Attempting fallback with retry logic. Query: '{}'. Error: '{}'",
+                    e.getFailedQuery(), e.getMessage());
 
-            String recoveryInstruction = String.format(
-                    "The previous attempt to generate an SQL query failed. Please correct it. " +
-                            "The failed SQL query was: ```sql\n%s\n```" +
-                            "The database error was: '%s'. " +
-                            "Analyze the user's request, the conversation history, and the error to generate a new, corrected, and valid response.",
-                    e.getFailedQuery(), e.getMessage()
-            );
+            return attemptFallbackWithRetry(conversationId, fullHistory, e.getFailedQuery(), e.getMessage(), 1);
 
-            fullHistory.add(new UserMessage(recoveryInstruction));
-
-            try {
-                log.info("Invoking fallback client for conversation: {}", conversationId);
-                ChatResponse fallbackAiResponse = fallbackChatClient.prompt()
-                        .system(this.systemPromptString)
-                        .messages(fullHistory)
-                        .advisors(new SimpleLoggerAdvisor())
-                        .call()
-                        .entity(ChatResponse.class);
-
-                ChatResponseDTO dto = convertToDTO(fallbackAiResponse);
-                chatMemory.add(conversationId, new AssistantMessage(objectMapper.writeValueAsString(dto)));
-                dto.setConversationId(conversationId);
-                return dto;
-
-            } catch (Exception fallbackException) {
-                log.error("Fallback client also failed to generate a valid response.", fallbackException);
-                return createErrorResponse("We tried to recover from an error, but were unable to process your request. Please try rephrasing your question.");
-            }
         } catch (Exception e) {
             log.error("An unexpected error occurred while processing message: ", e);
             return createErrorResponse("An unexpected error occurred. Please try again.");
         }
+    }
+
+    private ChatResponseDTO attemptFallbackWithRetry(String conversationId, List<Message> fullHistory,
+                                                     String failedQuery, String errorMessage, int attemptNumber) {
+
+        if (attemptNumber > MAX_RETRY_ATTEMPTS) {
+            log.error("Maximum retry attempts ({}) exceeded. Unable to generate valid SQL query.", MAX_RETRY_ATTEMPTS);
+            return createErrorResponse("We tried multiple times to process your request but were unable to generate a valid query. Please try rephrasing your question or check if the requested data exists.");
+        }
+
+        log.info("Fallback attempt {} for conversation: {}", attemptNumber, conversationId);
+
+        String recoveryInstruction = buildRecoveryInstruction(failedQuery, errorMessage, attemptNumber);
+
+        List<Message> retryHistory = List.copyOf(fullHistory);
+        retryHistory.add(new UserMessage(recoveryInstruction));
+
+        try {
+            ChatResponse fallbackAiResponse = fallbackChatClient.prompt()
+                    .system(this.systemPromptString)
+                    .messages(retryHistory)
+                    .advisors(new SimpleLoggerAdvisor())
+                    .call()
+                    .entity(ChatResponse.class);
+
+            ChatResponseDTO dto = convertToDTO(fallbackAiResponse);
+            chatMemory.add(conversationId, new AssistantMessage(objectMapper.writeValueAsString(fallbackAiResponse)));
+            dto.setConversationId(conversationId);
+            return dto;
+
+        } catch (SqlQueryFailedException retryException) {
+            log.warn("Fallback attempt {} failed. Query: '{}'. Error: '{}'. Retrying...",
+                    attemptNumber, retryException.getFailedQuery(), retryException.getMessage());
+
+            return attemptFallbackWithRetry(conversationId, fullHistory,
+                    retryException.getFailedQuery(), retryException.getMessage(), attemptNumber + 1);
+
+        } catch (Exception fallbackException) {
+            log.error("Fallback attempt {} failed with unexpected error.", attemptNumber, fallbackException);
+
+            if (attemptNumber < MAX_RETRY_ATTEMPTS) {
+                return attemptFallbackWithRetry(conversationId, fullHistory, failedQuery,
+                        "Unexpected error: " + fallbackException.getMessage(), attemptNumber + 1);
+            } else {
+                return createErrorResponse("We tried multiple times to process your request but encountered technical difficulties. Please try again later.");
+            }
+        }
+    }
+
+    private String buildRecoveryInstruction(String failedQuery, String errorMessage, int attemptNumber) {
+        StringBuilder instruction = new StringBuilder();
+
+        if (attemptNumber == 1) {
+            instruction.append("The previous SQL query attempt failed. You need to analyze the error carefully and generate a corrected query.\n\n");
+        } else {
+            instruction.append(String.format("This is retry attempt #%d. The previous query still failed. Please analyze more carefully.\n\n", attemptNumber));
+        }
+
+        instruction.append("**FAILED SQL QUERY:**\n");
+        instruction.append("```sql\n").append(failedQuery).append("\n```\n\n");
+
+        instruction.append("**DATABASE ERROR:**\n");
+        instruction.append("'").append(errorMessage).append("'\n\n");
+
+        instruction.append("**INSTRUCTIONS FOR CORRECTION:**\n");
+        instruction.append("1. **REFLECT ON DATABASE SCHEMA**: Carefully review the available tables, columns, and their exact names. Common issues include:\n");
+        instruction.append("   - Incorrect table names (check spelling and case sensitivity)\n");
+        instruction.append("   - Wrong column names or missing columns\n");
+        instruction.append("   - Incorrect data types in WHERE clauses or JOINs\n");
+        instruction.append("   - Missing table aliases or incorrect alias usage\n\n");
+
+        instruction.append("2. **ANALYZE THE ERROR**: Based on the database error message:\n");
+        instruction.append("   - If it mentions 'table doesn't exist' or 'unknown column', verify schema names\n");
+        instruction.append("   - If it's a syntax error, check SQL grammar and formatting\n");
+        instruction.append("   - If it's a data type mismatch, ensure proper casting or comparison\n");
+        instruction.append("   - If it's a constraint violation, check for valid relationships\n\n");
+
+        instruction.append("3. **SELF-CORRECTION PROCESS**:\n");
+        instruction.append("   - Compare your failed query against the known database schema\n");
+        instruction.append("   - Identify the specific issue causing the error\n");
+        instruction.append("   - Generate a new, corrected query that addresses the root cause\n");
+        instruction.append("   - Ensure your new query is syntactically correct and uses valid table/column names\n\n");
+
+        instruction.append("4. **VALIDATION CHECKLIST**:\n");
+        instruction.append("   - All table names exist and are spelled correctly\n");
+        instruction.append("   - All column names are valid for their respective tables\n");
+        instruction.append("   - JOIN conditions are properly structured\n");
+        instruction.append("   - WHERE clause conditions use appropriate data types\n");
+        instruction.append("   - Aggregate functions are used correctly with GROUP BY\n\n");
+
+        instruction.append("Please provide a complete, corrected response that addresses the user's original request with a valid SQL query.");
+
+        return instruction.toString();
     }
 
     private ChatResponseDTO convertToDTO(ChatResponse aiResponse) throws SqlQueryFailedException, JsonProcessingException {
@@ -168,7 +238,6 @@ public class ChatServiceImpl implements ChatService {
         }
         return dto;
     }
-
 
     private ChatResponseDTO.ChartConfigDTO convertChartConfig(ChatResponse.ChartConfig config) {
         if (config == null) return null;
