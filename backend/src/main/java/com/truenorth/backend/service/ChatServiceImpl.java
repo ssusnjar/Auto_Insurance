@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -87,6 +88,7 @@ public class ChatServiceImpl implements ChatService {
         chatMemory.add(conversationId, new UserMessage(userMessage));
         List<Message> fullHistory = chatMemory.get(conversationId);
 
+        // Try primary client first
         try {
             log.info("Processing message with primary client for conversation: {}", conversationId);
             ChatResponse aiResponse = chatClient.prompt()
@@ -125,7 +127,8 @@ public class ChatServiceImpl implements ChatService {
 
         String recoveryInstruction = buildRecoveryInstruction(failedQuery, errorMessage, attemptNumber);
 
-        List<Message> retryHistory = List.copyOf(fullHistory);
+        // Create a mutable copy to avoid modifying the original
+        List<Message> retryHistory = new ArrayList<>(fullHistory);
         retryHistory.add(new UserMessage(recoveryInstruction));
 
         try {
@@ -145,12 +148,14 @@ public class ChatServiceImpl implements ChatService {
             log.warn("Fallback attempt {} failed. Query: '{}'. Error: '{}'. Retrying...",
                     attemptNumber, retryException.getFailedQuery(), retryException.getMessage());
 
+            // Recursive retry with incremented attempt number
             return attemptFallbackWithRetry(conversationId, fullHistory,
                     retryException.getFailedQuery(), retryException.getMessage(), attemptNumber + 1);
 
         } catch (Exception fallbackException) {
             log.error("Fallback attempt {} failed with unexpected error.", attemptNumber, fallbackException);
 
+            // If it's not the last attempt, try again
             if (attemptNumber < MAX_RETRY_ATTEMPTS) {
                 return attemptFallbackWithRetry(conversationId, fullHistory, failedQuery,
                         "Unexpected error: " + fallbackException.getMessage(), attemptNumber + 1);
