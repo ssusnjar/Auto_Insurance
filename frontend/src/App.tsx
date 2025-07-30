@@ -54,10 +54,13 @@ export default function App() {
   const [historyId, setHistoryId] = useState<number>(1);
   const [chartTitle, setChartTitle] = useState<string>();
 
+  const [showTitle, setShowTitle] = useState<boolean>(true);
+
   const handleClick = () => {
     const value = inputRef.current?.value.trim();
     if (!value) return;
 
+    setShowTitle(false);
     setLoading(true);
 
     fetch("http://localhost:8080/api/v1/chat/message", {
@@ -70,6 +73,9 @@ export default function App() {
         if (data.errorMessage != null) {
           toast("Unijeli ste upit koji nije ispravan. :(");
           setLoading(false);
+          setChartData(null);
+          setTableData([]);
+          setShowTitle(true);
           return;
         }
         const rows = data.data;
@@ -148,6 +154,7 @@ export default function App() {
 
   const handleHistoryClick = (inputValue: string) => {
     setLoading(true);
+    setShowTitle(false);
 
     fetch("http://localhost:8080/api/v1/chat/message", {
       method: "POST",
@@ -225,6 +232,7 @@ export default function App() {
     setChartData(null);
     setTableData([]);
     setChartType("pie");
+    setShowTitle(true);
   };
 
   const chartOptions = {
@@ -323,6 +331,7 @@ export default function App() {
                 )}
               </>
             )}
+            {showTitle && <h1>Vaš AI asistent za podatke o auto osiguranju</h1>}
 
             <div className="input-section">
               <InputText
