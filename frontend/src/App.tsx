@@ -1,14 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import "./App.css";
 import { PrimeReactProvider } from "primereact/api";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
 import { Chart } from "primereact/chart";
 
+interface Entry {
+  label: string;
+  value: number;
+}
+
+interface ChartData {
+  labels: string[];
+  datasets: Entry[];
+}
+
 export default function App() {
   const [value, setValue] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [chartData, setChartData] = useState({});
+  const [chartData, setChartData] = useState<ChartData>({
+    labels: [],
+    datasets: [],
+  });
 
   const handleClick = () => {
     setLoading(true);
@@ -17,12 +30,8 @@ export default function App() {
       .then((res) => res.json())
       .then((data) => {
         setChartData({
-          labels: data.map((el: any) => el.label),
-          datasets: [
-            {
-              data: data.map((el: any) => el.value),
-            },
-          ],
+          labels: data.map((el: Entry) => el.label),
+          datasets: [],
         });
 
         setLoading(false);
