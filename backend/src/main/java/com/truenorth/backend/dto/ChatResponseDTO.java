@@ -20,6 +20,7 @@ public class ChatResponseDTO {
 
     private boolean isValid;
     private String errorMessage;
+    private String conversationId;
 
     @Data
     @NoArgsConstructor

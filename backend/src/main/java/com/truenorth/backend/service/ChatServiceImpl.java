@@ -92,6 +92,7 @@ public class ChatServiceImpl implements ChatService {
 
             chatMemory.add(conversationId, new AssistantMessage(objectMapper.writeValueAsString(dto)));
 
+            dto.setConversationId(conversationId);
             return dto;
 
         } catch (Exception e) {
