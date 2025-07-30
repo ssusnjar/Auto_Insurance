@@ -12,7 +12,11 @@ import lombok.AllArgsConstructor;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -31,8 +35,7 @@ public class ChatController {
 
         ChatResponseDTO response = chatService.processMessage(
                 request.getConversationId(),
-                request.getMessage()
-        );
+                request.getMessage());
 
         return ResponseEntity.ok(response);
     }
