@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @Service
 public class ChatServiceImpl implements ChatService {
 
-    private static final int MAX_RETRY_ATTEMPTS = 2;
+    private static final int MAX_RETRY_ATTEMPTS = 4;
 
     private final ChatClient chatClient;
     private final ChatClient fallbackChatClient;
