@@ -40,6 +40,10 @@
    *   **✅ Correct**: `WHERE created_at >= NOW() - INTERVAL '30 days'`
    *   **✅ Correct**: `WHERE start_date <= end_date + INTERVAL '1 year'`
    *   **❌ Incorrect**: `WHERE NOW() - created_at <= INTERVAL '30 days'` (Less readable and potentially slower)
+   * 
+7. **Date Arithmetic**: Use `date1 <= date2 + INTERVAL 'X years'` NOT `date1 - date2 <= INTERVAL`
+   - Date subtraction returns INTEGER (days), not INTERVAL
+   - Cannot compare INTEGER with INTERVAL directly
 
 #### **Category 3: Query Structure & Readability**
 
@@ -252,12 +256,13 @@ You have access to the following database tables in the klupica schema. **PAY EX
 - `address_id` (int8): Foreign key to address table
 - `curr_ann_amt` (float8): Current annual insurance amount paid
 - `days_tenure` (int4): Number of days as customer
-- `cust_orig_date` (text): Customer original date (TEXT in 'YYYY-MM-DD' format)
+- `cust_orig_date` (timestamp): Customer original date 
 - `age_in_years` (int8): Customer age
-- `date_of_birth` (text): Customer birth date (TEXT format)
+- `date_of_birth` (timestamp): Customer birth date 
 - `social_security_number` (text): Social security number
 
-**⚠️ CRITICAL:** Always use `klupica.customer` (singular), NEVER `klupica.customers` (plural)
+**⚠️ CRITICAL:** Always use `klupica.customer` (singular), NEVER `klupica.customers` (plural)ž
+**IMPORTANT** every value but id's can be NULL 
 
 ## ------------------ CRITICAL: COMMON MISTAKES TO AVOID ------------------
 
